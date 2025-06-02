@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block title %}Bemorlar ro'yxati{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        Bemorlar ro'yxati
+                    </h2>
+                    <small class="text-muted">
+                        <i class="bi bi-person-check me-1"></i>
+                        {{ request.user.username }} ({{ request.user.get_full_name|default:request.user.get_username }})
+                    </small>
+                </div>
+                <div>
+                    <a href="{% url 'index' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Yangi bemor
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Bemor ismi, telefon raqami yoki ID bo'yicha qidiruv..."
+                               value="{{ request.GET.q }}" id="searchInput">
+                        <button type="submit" class="btn btn-primary">Qidirish</button>
+                        {% if request.GET.q %}
+                        <a href="{% url 'patients' %}" class="btn btn-outline-secondary" title="Tozalash">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="sort" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Saralash --</option>
+                        <option value="name_asc" {% if request.GET.sort == 'name_asc' %}selected{% endif %}>Ism (A-Z)</option>
+                        <option value="name_desc" {% if request.GET.sort == 'name_desc' %}selected{% endif %}>Ism (Z-A)</option>
+                        <option value="date_asc" {% if request.GET.sort == 'date_asc' %}selected{% endif %}>Sana (Eski-Yangi)</option>
+                        <option value="date_desc" {% if request.GET.sort == 'date_desc' %}selected{% endif %}>Sana (Yangi-Eski)</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <form method="post" action="{% url 'export_excel' %}" id="exportForm">
+                {% csrf_token %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="40" class="text-center">
+                                    <input type="radio" id="selectSingle" name="patient_selection" class="form-check-input" disabled>
+                                </th>
+                                <th width="60">#</th>
+                                <th>Ism</th>
+                                <th>Telefon</th>
+                                <th>Yaratilgan sana</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in patients %}
+                            <tr>
+                                <td class="text-center">
+                                    <input type="radio" name="selected_patient" value="{{ p.id }}"
+                                           class="form-check-input patient-radio">
+                                </td>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3">
+                                            <span class="avatar-title bg-primary-light rounded-circle text-primary">
+                                                {{ p.full_name|slice:":1"|upper }}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ p.full_name }}</h6>
+                                            <small class="text-muted">ID: {{ p.id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="tel:{{ p.telephone }}" class="text-decoration-none">
+                                        <i class="bi bi-telephone me-2"></i>{{ p.telephone }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        <i class="bi bi-calendar me-2"></i>
+                                        {{ p.created_at|date:"Y-m-d H:i" }}
+                                    </span>
+                                </td>
+
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-exclamation-circle display-6 d-block mb-2"></i>
+                                    Hech qanday bemor topilmadi
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center p-3 border-top bg-light">
+                    <div>
+                        <span id="selectedInfo">Bemor tanlanmagan</span>
+                    </div>
+                    <button type="submit" class="btn btn-success" id="exportBtn" disabled>
+                        <i class="bi bi-file-excel me-2"></i>Excelga chiqarish
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Enhanced Functionality -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const radioButtons = document.querySelectorAll('.patient-radio');
+        const exportBtn = document.getElementById('exportBtn');
+        const selectedInfo = document.getElementById('selectedInfo');
+        const searchForm = document.querySelector('form[method="get"]');
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.querySelector('.btn-outline-secondary');
+
+        // Update selection info and button state
+        function updateSelection() {
+            const selectedRadio = document.querySelector('.patient-radio:checked');
+
+            if (selectedRadio) {
+                const selectedName = selectedRadio.closest('tr').querySelector('h6').textContent;
+                selectedInfo.textContent = `Tanlangan: ${selectedName}`;
+                exportBtn.disabled = false;
+            } else {
+                selectedInfo.textContent = 'Bemor tanlanmagan';
+                exportBtn.disabled = true;
+            }
+        }
+
+        // Radio button functionality
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', updateSelection);
+        });
+
+        // Search input functionality
+        searchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                searchForm.submit();
+            }
+
+            // Real-time search (debounce implementation)
+            if (window.searchTimeout) {
+                clearTimeout(window.searchTimeout);
+            }
+
+            window.searchTimeout = setTimeout(() => {
+                if (this.value.length > 2 || this.value.length === 0) {
+                    searchForm.submit();
+                }
+            }, 500);
+        });
+
+        // Clear search button
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+            });
+        }
+    });
+</script>
+
+<!-- Pagination -->
+{% if patients.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if patients.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1&q={{ request.GET.q }}&sort={{ request.GET.sort }}">
+                <i class="bi bi-chevron-double-left"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ patients.previous_page_number }}&q={{ request.GET.q }}&sort={{ request.GET.sort }}">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+
+        {% for num in patients.paginator.page_range %}
+            {% if patients.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > patients.number|add:'-3' and num < patients.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}&q={{ request.GET.q }}&sort={{ request.GET.sort }}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if patients.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ patients.next_page_number }}&q={{ request.GET.q }}&sort={{ request.GET.sort }}">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ patients.paginator.num_pages }}&q={{ request.GET.q }}&sort={{ request.GET.sort }}">
+                <i class="bi bi-chevron-double-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<style>
+    .avatar-sm {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .avatar-title {
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .bg-primary-light {
+        background-color: rgba(58, 123, 213, 0.1);
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(58, 123, 213, 0.05);
+    }
+
+    [data-bs-theme="dark"] .bg-primary-light {
+        background-color: rgba(58, 123, 213, 0.2);
+    }
+</style>
+{% endblock %}

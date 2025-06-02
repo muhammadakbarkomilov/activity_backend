@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid vh-100">
+  <div class="row h-100">
+    <!-- Left side (background) -->
+    <div class="col-md-6 d-none d-md-flex bg-primary-light align-items-center justify-content-center">
+      <div class="text-center p-5">
+        {% load static %}
+        <img src="{% static 'logo/img.png' %}" alt="Hospital Logo" class="mb-4" width="120">
+        <h1 class="display-4 fw-bold mb-4">Hospital Management</h1>
+        <p class="lead fs-4">Secure patient management system</p>
+      </div>
+    </div>
+
+    <!-- Right side (login form) -->
+    <div class="col-md-6 d-flex align-items-center justify-content-center">
+      <div class="w-100 p-4" style="max-width: 500px;">
+        <!-- Theme toggle -->
+        <div class="d-flex justify-content-end mb-4">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="darkModeToggle">
+            <label class="form-check-label" for="darkModeToggle">
+              <i class="bi"></i> <!-- Icon will be set by JavaScript -->
+            </label>
+          </div>
+        </div>
+
+        <!-- Login form -->
+        <div class="text-center mb-5">
+          <h2 class="fw-bold mb-3">Welcome Back</h2>
+          <p class="text-muted">Please sign in to access the system</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          Invalid username or password. Please try again.
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+
+        <form method="post" class="needs-validation" novalidate>
+          {% csrf_token %}
+
+          <!-- Username field -->
+          <div class="mb-4">
+            <label for="id_username" class="form-label">Username</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+              <input type="text" name="username" class="form-control form-control-lg" id="id_username"
+                     placeholder="Enter your username" required>
+            </div>
+          </div>
+
+          <!-- Password field -->
+          <div class="mb-4">
+            <label for="id_password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+              <input type="password" name="password" class="form-control form-control-lg" id="id_password"
+                     placeholder="Enter your password" required>
+            </div>
+          </div>
+
+          <!-- Remember me and forgot password -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe">
+              <label class="form-check-label" for="rememberMe">Remember me</label>
+            </div>
+
+          </div>
+
+          <!-- Submit button -->
+          <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+            <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+          </button>
+
+          <!-- Divider -->
+          <div class="d-flex align-items-center my-4">
+            <hr class="flex-grow-1">
+            <span class="mx-3 text-muted">or</span>
+            <hr class="flex-grow-1">
+          </div>
+
+          <!-- Alternative login options -->
+          <div class="text-center">
+            <p class="text-muted">Don't have an account? <a href="https://t.me/calibr_i" class="text-decoration-none">Contact admin</a></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
