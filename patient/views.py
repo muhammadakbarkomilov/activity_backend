@@ -1,5 +1,6 @@
 import os
 from django.conf import settings
+from django.contrib import messages
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import PatientData
@@ -8,6 +9,24 @@ import openpyxl
 from openpyxl.utils import get_column_letter
 from django.http import HttpResponse
 from django.db.models import Q
+
+
+def edit_patient(request, pk):
+    patient = get_object_or_404(PatientData, pk=pk)
+    if request.method == 'POST':
+        form = PatientDataForm(request.POST, instance=patient)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Bemor ma'lumotlari muvaffaqiyatli o'zgartirildi!")
+            return redirect('patients')
+    else:
+        form = PatientDataForm(instance=patient)
+
+    return render(request, 'edit_patient.html', {
+        'form': form,
+        'patient': patient
+    })
+
 
 def index(request):
     if request.method == 'POST':
@@ -677,20 +696,42 @@ def export_selected_excel(request):
                 sheet[f'G62'] = f"yes" if patient.congenital_microcephaly else 'no'
                 sheet[f'G63'] = f"yes" if patient.focal_brain_malformation else 'no'
                 sheet[f'G64'] = f"yes" if patient.multifocal_brain_malformation else 'no'
-                sheet[f'G65'] = f"yes" if patient.symmetric_polymicrogyria else 'no'
-                sheet[f'G66'] = f"yes" if patient.asymmetric_polymicrogyria else 'no'
+                sheet[f'G65'] = f"yes" if patient.polimicrogria else 'no'
+                sheet[f'G66'] = f"yes" if patient.optic_nerve_atrophy else 'no'
                 sheet[f'G67'] = f"yes" if patient.holoprosencephaly else 'no'
-                sheet[f'G68'] = f"yes" if patient.periventricular_heterotopia else 'no'
+                sheet[f'G68'] = f"yes" if patient.heterotopia else 'no'
 
                 #MRI 2
                 sheet[f'N61'] = f"yes" if patient.tuberous_sclerosis else 'no'
-                sheet[f'N62'] = f"yes" if patient.subcortical_laminar_heterotopia else 'no'
+                sheet[f'N62'] = f"yes" if patient.hypothalamic_hamartoma else 'no'
                 sheet[f'N63'] = f"yes" if patient.leucodystrophy else 'no'
                 sheet[f'N64'] = f"yes" if patient.lissencephaly else 'no'
-                sheet[f'N65'] = f"yes" if patient.polycystic_brain else 'no'
-                sheet[f'N66'] = f"yes" if patient.after_stroke else 'no'
+                sheet[f'N65'] = f"yes" if patient.intracranial_hemorrhage else 'no'
+                sheet[f'N66'] = f"yes" if patient.cerebral_venous_sinus_thrombosis else 'no'
                 sheet[f'N67'] = f"yes" if patient.atrophy else 'no'
                 sheet[f'N68'] = f"yes" if patient.hypoplasia_corpus_callosum else 'no'
+
+                #MRI3
+                sheet[f'X61'] = f"yes" if patient.corpus_callosum_atrophy else 'no'
+                sheet[f'X62'] = f"yes" if patient.ventriculomegaly else 'no'
+                sheet[f'X63'] = f"yes" if patient.white_matter_changes else 'no'
+                sheet[f'X64'] = f"yes" if patient.cerebral_atrophy else 'no'
+                sheet[f'X65'] = f"yes" if patient.cerebellar_atrophy else 'no'
+                sheet[f'X66'] = f"yes" if patient.basal_ganga else 'no'
+                sheet[f'X67'] = f"yes" if patient.hypoxic_ischemic_barin else 'no'
+                sheet[f'X68'] = f"yes" if patient.hydrocephalus else 'no'
+                sheet[f'AI61'] = f"yes" if patient.development_delay else 'no'
+                sheet[f'AI62'] = f"yes" if patient.development_delay_and_epilepsy else 'no'
+                sheet[f'AI63'] = f"yes" if patient.epilepsy_only else 'no'
+
+                #eeg
+                sheet[f'AA70'] = f"yes" if patient.fed else 'no'
+                sheet[f'AA71'] = f"yes" if patient.g else 'no'
+                sheet[f'AA72'] = f"yes" if patient.fed_g else 'no'
+                sheet[f'AA73'] = f"yes" if patient.swa else 'no'
+                sheet[f'AA74'] = f"yes" if patient.bs else 'no'
+                sheet[f'AA75'] = f"yes" if patient.normal else 'no'
+
 
                 #FEVER
                 sheet[f'G71'] = f"yes" if patient.afebrile_infections else 'no'
@@ -822,6 +863,11 @@ def export_selected_excel(request):
                 sheet[f'E95'] = f"yes" if patient.methyl_prednisolone_dose else 'no'
                 sheet[f'H95'] = patient.methyl_prednisolone_dose if patient.methyl_prednisolone_dose else 'no'
                 sheet[f'K95'] = patient.methyl_prednisolone_description if patient.methyl_prednisolone_description else 'no'
+                sheet[f'U95'] = f"yes" if patient.wes else 'no'
+                sheet[f'W95'] = patient.pathogenic if patient.pathogenic else 'no'
+                sheet[f'Z95'] = patient.like_pathogenic if patient.like_pathogenic else 'no'
+                sheet[f'AE95'] = patient.vus if patient.vus else 'no'
+
 
                 sheet[f'E96'] = f"yes" if patient.prednisolone_dose else 'no'
                 sheet[f'H96'] = patient.prednisolone_dose if patient.prednisolone_dose else 'no'

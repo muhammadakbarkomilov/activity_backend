@@ -27,9 +27,9 @@ SECRET_KEY = 'django-insecure-2it#up1w=!1woeo@yj*p-ane8w2fabp5nf%i+yf7gvnv37-*5+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['www.eb19-92-119-248-163.ngrok-free.app','eb19-92-119-248-163.ngrok-free.app']
+ALLOWED_HOSTS = ['www.2463-37-110-215-85.ngrok-free.app','2463-37-110-215-85.ngrok-free.app']
 # CSRF_TRUSTED_ORIGINS is used to allow cross-site request forgery protection
-CSRF_TRUSTED_ORIGINS = ['https://eb19-92-119-248-163.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://2463-37-110-215-85.ngrok-free.app']
 
 # Application definition
 

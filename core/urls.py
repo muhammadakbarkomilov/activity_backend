@@ -25,4 +25,5 @@ urlpatterns = [
     path('patient/add/', views.index, name='index'),
     path('patients/', views.patients, name='patients'),
     path('export/', views.export_selected_excel, name='export_excel'),
+    path('edit-patient/<int:pk>/', views.edit_patient, name='edit_patient'),
 ]

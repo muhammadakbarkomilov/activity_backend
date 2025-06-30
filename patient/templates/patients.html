@@ -70,11 +70,12 @@
                                 <th>Ism</th>
                                 <th>Telefon</th>
                                 <th>Yaratilgan sana</th>
+                                <th width="120"></th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for p in patients %}
-                            <tr>
+                            <tr class="patient-row" data-patient-id="{{ p.id }}">
                                 <td class="text-center">
                                     <input type="radio" name="selected_patient" value="{{ p.id }}"
                                            class="form-check-input patient-radio">
@@ -104,7 +105,10 @@
                                         {{ p.created_at|date:"Y-m-d H:i" }}
                                     </span>
                                 </td>
-
+                                <td class="text-end">
+                                    <a href="{% url 'edit_patient' p.id %}" class="btn btn-sm btn-outline-primary edit-btn" style="display: none;">
+                                        <i class="bi bi-pencil"></i> Tahrirlash
+                                    </a>
                                 </td>
                             </tr>
                             {% empty %}
@@ -123,9 +127,14 @@
                     <div>
                         <span id="selectedInfo">Bemor tanlanmagan</span>
                     </div>
-                    <button type="submit" class="btn btn-success" id="exportBtn" disabled>
-                        <i class="bi bi-file-excel me-2"></i>Excelga chiqarish
-                    </button>
+                    <div>
+                        <a href="#" class="btn btn-warning me-2" id="editBtn" style="display: none;">
+                            <i class="bi bi-pencil me-2"></i>Tahrirlash
+                        </a>
+                        <button type="submit" class="btn btn-success" id="exportBtn" disabled>
+                            <i class="bi bi-file-excel me-2"></i>Excelga chiqarish
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -137,28 +146,73 @@
     document.addEventListener('DOMContentLoaded', function() {
         const radioButtons = document.querySelectorAll('.patient-radio');
         const exportBtn = document.getElementById('exportBtn');
+        const editBtn = document.getElementById('editBtn');
         const selectedInfo = document.getElementById('selectedInfo');
         const searchForm = document.querySelector('form[method="get"]');
         const searchInput = document.getElementById('searchInput');
         const clearBtn = document.querySelector('.btn-outline-secondary');
+        const patientRows = document.querySelectorAll('.patient-row');
 
         // Update selection info and button state
         function updateSelection() {
             const selectedRadio = document.querySelector('.patient-radio:checked');
 
+            // Hide all edit buttons first
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.style.display = 'none';
+            });
+
             if (selectedRadio) {
-                const selectedName = selectedRadio.closest('tr').querySelector('h6').textContent;
+                const selectedRow = selectedRadio.closest('tr');
+                const selectedName = selectedRow.querySelector('h6').textContent;
+                const patientId = selectedRow.dataset.patientId;
+
                 selectedInfo.textContent = `Tanlangan: ${selectedName}`;
                 exportBtn.disabled = false;
+                editBtn.style.display = 'inline-block';
+                editBtn.href = `/edit-patient/${patientId}/`;  // Update the edit URL
+
+                // Show edit button for the selected row
+                selectedRow.querySelector('.edit-btn').style.display = 'inline-block';
             } else {
                 selectedInfo.textContent = 'Bemor tanlanmagan';
                 exportBtn.disabled = true;
+                editBtn.style.display = 'none';
             }
         }
 
         // Radio button functionality
         radioButtons.forEach(radio => {
             radio.addEventListener('change', updateSelection);
+        });
+
+        // Make entire row clickable
+        patientRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Don't trigger if clicking on a link or button
+                if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.closest('a') || e.target.closest('button')) {
+                    return;
+                }
+
+                const radio = this.querySelector('.patient-radio');
+                if (radio) {
+                    radio.checked = true;
+                    updateSelection();
+                }
+            });
+
+            // Highlight row on hover
+            row.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = 'rgba(58, 123, 213, 0.05)';
+                this.style.cursor = 'pointer';
+            });
+
+            row.addEventListener('mouseleave', function() {
+                const radio = this.querySelector('.patient-radio');
+                if (!radio || !radio.checked) {
+                    this.style.backgroundColor = '';
+                }
+            });
         });
 
         // Search input functionality
@@ -256,6 +310,14 @@
 
     [data-bs-theme="dark"] .bg-primary-light {
         background-color: rgba(58, 123, 213, 0.2);
+    }
+
+    .patient-row.selected {
+        background-color: rgba(58, 123, 213, 0.1);
+    }
+
+    .edit-btn {
+        transition: all 0.2s ease;
     }
 </style>
 {% endblock %}
